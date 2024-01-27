@@ -10,23 +10,41 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import os
+import environ
 from pathlib import Path
 from datetime import timedelta
 
+
+
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+env = environ.Env(DEBUG=(bool, False)) 
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+
+
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+# SECRET_KEY = 'django-insecure-ubek98%^$3fe^)47_vdp&sq=j6=fyo$!$_a87b7-2%ifnp&zbr'
+
 SECRET_KEY = 'django-insecure-ubek98%^$3fe^)47_vdp&sq=j6=fyo$!$_a87b7-2%ifnp&zbr'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = []
+
+# SECRET_KEY = os.environ.get("SECRET_KEY")
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = env("DEBUG") 
+
+ALLOWED_HOSTS = ['*']
+
 
 
 # Application definition
@@ -43,6 +61,8 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
    'rest_framework',
+   'rest_framework_simplejwt',
+   'rest_framework_simplejwt.token_blacklist',
    
 ]
 
@@ -154,20 +174,42 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-    ],
-    
-    'DEFAULT_PARSER_CLASSES': [
-        'rest_framework.parsers.JSONParser',
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
     ],
 
 }
 
 SIMPLE_JWT = {
-
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=180),
     "REFRESH_TOKEN_LIFETIME": timedelta(days= 90),
-    
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+
+    'ALGORITHM': 'HS256',
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+
+    'AUTH_HEADER_TYPES': ('Bearer', 'JWT'),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+
+    'JTI_CLAIM': 'jti',
+
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=15),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get("EMAIL_HOST")
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
