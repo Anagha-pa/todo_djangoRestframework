@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .utils import get_tokens_for_user
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import *
 from .emails import *
@@ -10,6 +10,7 @@ from .emails import *
 # Create your views here.
 
 class RegisterView(APIView):
+    permission_classes = [AllowAny]
     def post(self,request):
         try:
             data = request.data
@@ -44,6 +45,7 @@ class RegisterView(APIView):
 
 
 class VerifyOTPView(APIView):
+    permission_classes = [AllowAny]
     def post(self,request):
         try:
             data = request.data
@@ -54,7 +56,7 @@ class VerifyOTPView(APIView):
 
             user = UserData.objects.filter(email=email,otp=otp).first()
             if user:
-                if user[0].otp == otp:
+                if user.otp == otp:
                     user.is_staff = True
                     user.save()
                     return Response(
@@ -89,6 +91,7 @@ class VerifyOTPView(APIView):
 
 
 class LoginView(APIView):
+    permission_classes = [AllowAny]
     def post(self,request):       
         data = request.data
         serializer = LoginSerializer(data=data)
@@ -108,7 +111,8 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self,request):
         try:
-            refresh_token = request.get["refresh_token"]
+           
+            refresh_token = request.data["refresh"]
             token = RefreshToken(refresh_token)
             token.blacklist()
             return Response(
